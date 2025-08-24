@@ -1,32 +1,31 @@
-<?php
-// ===============================
-// Fancode Proxy Script
-// ===============================
-
-// Original Fancode Base URL
-$baseUrl = "https://in-mc-fdlive.fancode.com/mumbai/133234_english_hls_185276fe1c35207ta-di_h264/";
-
-// If no file requested, serve index.m3u8
-$file = isset($_GET['file']) ? $_GET['file'] : "index.m3u8";
-
-// Build target URL
-$target = $baseUrl . $file;
-
-// Fetch with curl
-$ch = curl_init($target);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-$data = curl_exec($ch);
-$info = curl_getinfo($ch);
-curl_close($ch);
-
-// Fix .m3u8 paths so that .ts files also go through proxy
-if (strpos($file, ".m3u8") !== false) {
-    $data = preg_replace('/(.*\.ts)/', 'proxy.php?file=$1', $data);
-}
-
-// Send correct headers
-header("Content-Type: " . $info['content_type']);
-echo $data;
-?>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live Stream</title>
+</head>
+<body>
+  <video id="live-video" controls autoplay style="width: 100%; max-width: 640px;"></video>
+  
+  <!-- hls.js load -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script>
+    const video = document.getElementById('live-video');
+    const streamUrl = 'https://your-cdn.com/path/to/stream.m3u8'; // ekhane nijer stream url diba
+    
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(streamUrl);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+    } 
+    else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = streamUrl;
+      video.addEventListener('loadedmetadata', () => video.play());
+    } 
+    else {
+      video.innerHTML = 'Your browser does not support HLS.';
+    }
+  </script>
+</body>
+</html>
